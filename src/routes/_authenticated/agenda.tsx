@@ -183,6 +183,7 @@ function MeetingDialog({ open, onOpenChange, meeting, onSaved }: { open: boolean
         decisions: meeting.decisions ?? "",
         pendings: meeting.pendings ?? "",
         next_steps: meeting.next_steps ?? "",
+        recurrence: meeting.recurrence ?? "",
       });
     } else {
       const now = new Date(); now.setMinutes(0, 0, 0); now.setHours(now.getHours() + 1);
@@ -197,6 +198,7 @@ function MeetingDialog({ open, onOpenChange, meeting, onSaved }: { open: boolean
         decisions: "",
         pendings: "",
         next_steps: "",
+        recurrence: "",
       });
     }
   }, [open, meeting]);
@@ -209,6 +211,7 @@ function MeetingDialog({ open, onOpenChange, meeting, onSaved }: { open: boolean
     const { data: u } = await supabase.auth.getUser();
     const payload: any = {
       ...form,
+      recurrence: form.recurrence || null,
       start_at: new Date(form.start_at).toISOString(),
       end_at: form.end_at ? new Date(form.end_at).toISOString() : null,
       user_id: u.user!.id,
@@ -235,8 +238,21 @@ function MeetingDialog({ open, onOpenChange, meeting, onSaved }: { open: boolean
             <div className="grid gap-2"><Label>Fim</Label><Input type="datetime-local" value={form.end_at ?? ""} onChange={(e) => set("end_at", e.target.value)} /></div>
             <div className="grid gap-2 col-span-2"><Label>Participantes</Label><Input value={form.participants ?? ""} onChange={(e) => set("participants", e.target.value)} placeholder="Nome 1, Nome 2..." /></div>
             <div className="grid gap-2 col-span-2"><Label>Link da reunião</Label><Input value={form.meeting_link ?? ""} onChange={(e) => set("meeting_link", e.target.value)} placeholder="https://teams.microsoft.com/..." /></div>
+            <div className="grid gap-2 col-span-2">
+              <Label>Recorrência</Label>
+              <Select value={form.recurrence || undefined} onValueChange={(v) => set("recurrence", v === "none" ? "" : v)}>
+                <SelectTrigger><SelectValue placeholder="Sem recorrência" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem recorrência</SelectItem>
+                  <SelectItem value="diaria">Diária</SelectItem>
+                  <SelectItem value="semanal">Semanal</SelectItem>
+                  <SelectItem value="mensal">Mensal</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="grid gap-2"><Label>Objetivo</Label><Textarea rows={2} value={form.objective ?? ""} onChange={(e) => set("objective", e.target.value)} /></div>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground mt-2">Notas da reunião</p>
+          <div className="grid gap-2"><Label>Objetivo</Label><Textarea rows={2} value={form.objective ?? ""} onChange={(e) => set("objective", e.target.value)} placeholder="O que se espera alcançar" /></div>
           <div className="grid gap-2"><Label>Contexto</Label><Textarea rows={2} value={form.context ?? ""} onChange={(e) => set("context", e.target.value)} /></div>
           <div className="grid gap-2"><Label>Decisões</Label><Textarea rows={2} value={form.decisions ?? ""} onChange={(e) => set("decisions", e.target.value)} /></div>
           <div className="grid gap-2"><Label>Pendências</Label><Textarea rows={2} value={form.pendings ?? ""} onChange={(e) => set("pendings", e.target.value)} /></div>
