@@ -14,7 +14,274 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      meeting_tasks: {
+        Row: {
+          meeting_id: string
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          meeting_id: string
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          meeting_id?: string
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_tasks_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_tasks_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meetings: {
+        Row: {
+          context: string | null
+          created_at: string
+          decisions: string | null
+          end_at: string | null
+          event_type: Database["public"]["Enums"]["event_type"]
+          id: string
+          meeting_link: string | null
+          next_steps: string | null
+          objective: string | null
+          participants: string | null
+          pendings: string | null
+          start_at: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          context?: string | null
+          created_at?: string
+          decisions?: string | null
+          end_at?: string | null
+          event_type?: Database["public"]["Enums"]["event_type"]
+          id?: string
+          meeting_link?: string | null
+          next_steps?: string | null
+          objective?: string | null
+          participants?: string | null
+          pendings?: string | null
+          start_at: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          context?: string | null
+          created_at?: string
+          decisions?: string | null
+          end_at?: string | null
+          event_type?: Database["public"]["Enums"]["event_type"]
+          id?: string
+          meeting_link?: string | null
+          next_steps?: string | null
+          objective?: string | null
+          participants?: string | null
+          pendings?: string | null
+          start_at?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      task_followups: {
+        Row: {
+          created_at: string
+          followup_date: string
+          id: string
+          next_followup_date: string | null
+          note: string | null
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          followup_date?: string
+          id?: string
+          next_followup_date?: string | null
+          note?: string | null
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          followup_date?: string
+          id?: string
+          next_followup_date?: string | null
+          note?: string | null
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_followups_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          demand_type: Database["public"]["Enums"]["task_demand_type"] | null
+          description: string | null
+          due_date: string | null
+          followup_owner: string | null
+          id: string
+          kind: Database["public"]["Enums"]["task_kind"]
+          last_followup_date: string | null
+          last_followup_note: string | null
+          needs_response: boolean
+          next_followup_date: string | null
+          origin: Database["public"]["Enums"]["task_origin"] | null
+          owner: string | null
+          priority: Database["public"]["Enums"]["task_priority"]
+          product_id: string | null
+          response_channel:
+            | Database["public"]["Enums"]["response_channel"]
+            | null
+          response_summary: string | null
+          status: Database["public"]["Enums"]["task_status"]
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          demand_type?: Database["public"]["Enums"]["task_demand_type"] | null
+          description?: string | null
+          due_date?: string | null
+          followup_owner?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["task_kind"]
+          last_followup_date?: string | null
+          last_followup_note?: string | null
+          needs_response?: boolean
+          next_followup_date?: string | null
+          origin?: Database["public"]["Enums"]["task_origin"] | null
+          owner?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"]
+          product_id?: string | null
+          response_channel?:
+            | Database["public"]["Enums"]["response_channel"]
+            | null
+          response_summary?: string | null
+          status?: Database["public"]["Enums"]["task_status"]
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          demand_type?: Database["public"]["Enums"]["task_demand_type"] | null
+          description?: string | null
+          due_date?: string | null
+          followup_owner?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["task_kind"]
+          last_followup_date?: string | null
+          last_followup_note?: string | null
+          needs_response?: boolean
+          next_followup_date?: string | null
+          origin?: Database["public"]["Enums"]["task_origin"] | null
+          owner?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"]
+          product_id?: string | null
+          response_channel?:
+            | Database["public"]["Enums"]["response_channel"]
+            | null
+          response_summary?: string | null
+          status?: Database["public"]["Enums"]["task_status"]
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +290,23 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      event_type: "reuniao" | "tarefa"
+      response_channel: "email" | "teams" | "whatsapp" | "reuniao"
+      task_demand_type: "bug" | "melhoria" | "duvida" | "processo" | "projeto"
+      task_kind: "minha" | "cobranca" | "ambos"
+      task_origin:
+        | "email"
+        | "teams"
+        | "reuniao"
+        | "whatsapp"
+        | "sistema"
+        | "interno"
+      task_priority: "alta" | "media" | "baixa"
+      task_status:
+        | "a_fazer"
+        | "em_andamento"
+        | "aguardando_terceiros"
+        | "concluido"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +433,26 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      event_type: ["reuniao", "tarefa"],
+      response_channel: ["email", "teams", "whatsapp", "reuniao"],
+      task_demand_type: ["bug", "melhoria", "duvida", "processo", "projeto"],
+      task_kind: ["minha", "cobranca", "ambos"],
+      task_origin: [
+        "email",
+        "teams",
+        "reuniao",
+        "whatsapp",
+        "sistema",
+        "interno",
+      ],
+      task_priority: ["alta", "media", "baixa"],
+      task_status: [
+        "a_fazer",
+        "em_andamento",
+        "aguardando_terceiros",
+        "concluido",
+      ],
+    },
   },
 } as const
