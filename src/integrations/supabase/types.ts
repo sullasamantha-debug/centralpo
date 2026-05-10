@@ -60,6 +60,7 @@ export type Database = {
           objective: string | null
           participants: string | null
           pendings: string | null
+          recurrence: string | null
           start_at: string
           title: string
           updated_at: string
@@ -77,6 +78,7 @@ export type Database = {
           objective?: string | null
           participants?: string | null
           pendings?: string | null
+          recurrence?: string | null
           start_at: string
           title: string
           updated_at?: string
@@ -94,6 +96,7 @@ export type Database = {
           objective?: string | null
           participants?: string | null
           pendings?: string | null
+          recurrence?: string | null
           start_at?: string
           title?: string
           updated_at?: string
