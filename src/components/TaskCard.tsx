@@ -36,7 +36,7 @@ export function TaskCard({ task, product, onChanged }: Props) {
   const dState = dueState(task.due_date);
 
   const setStatus = async (status: string) => {
-    const { error } = await supabase.from("tasks").update({ status }).eq("id", task.id);
+    const { error } = await supabase.from("tasks").update({ status: status as any }).eq("id", task.id);
     if (error) toast.error(error.message);
     else { toast.success("Status atualizado"); onChanged(); }
   };
