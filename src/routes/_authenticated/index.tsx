@@ -48,7 +48,7 @@ function Dashboard() {
   const productMap = new Map(products.map((p) => [p.id, p]));
   const open = tasks.filter((t) => t.status !== "concluido");
 
-  const cobrarHoje = open.filter((t) => t.next_followup_date && t.next_followup_date <= today);
+  const cobrarHoje = open.filter((t) => t.status === "aguardando_terceiros" && t.next_followup_date && t.next_followup_date <= today);
   const responder = open.filter((t) => t.needs_response);
   const atrasadas = open.filter((t) => t.due_date && t.due_date < today);
   const hoje = open.filter((t) => t.due_date === today);

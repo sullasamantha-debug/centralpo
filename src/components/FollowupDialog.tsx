@@ -22,6 +22,7 @@ export function FollowupDialog({ open, onOpenChange, taskId, followupOwner, onSa
   const [saving, setSaving] = useState(false);
 
   const save = async () => {
+    if (!nextDate) { toast.error("Defina o próximo follow-up"); return; }
     setSaving(true);
     const today = todayISO();
     const { data: userData } = await supabase.auth.getUser();
@@ -65,8 +66,9 @@ export function FollowupDialog({ open, onOpenChange, taskId, followupOwner, onSa
             <Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} placeholder="O que foi conversado / status atual" autoFocus />
           </div>
           <div className="grid gap-2">
-            <Label>Próximo follow-up</Label>
-            <Input type="date" value={nextDate} onChange={(e) => setNextDate(e.target.value)} />
+            <Label>Próximo follow-up *</Label>
+            <Input type="date" required value={nextDate} onChange={(e) => setNextDate(e.target.value)} min={todayISO()} />
+            <p className="text-xs text-muted-foreground">Hoje será registrado como último follow-up automaticamente.</p>
           </div>
         </div>
         <DialogFooter>
