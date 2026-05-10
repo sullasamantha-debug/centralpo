@@ -187,7 +187,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function SelectField({ value, onValueChange, options, placeholder }: any) {
+function SelectField({ value, onValueChange, options, placeholder }: { value: string; onValueChange: (v: string) => void; options: readonly { value: string; label: string }[]; placeholder?: string }) {
   return (
     <Select value={value || undefined} onValueChange={onValueChange}>
       <SelectTrigger><SelectValue placeholder={placeholder ?? "Selecionar..."} /></SelectTrigger>
