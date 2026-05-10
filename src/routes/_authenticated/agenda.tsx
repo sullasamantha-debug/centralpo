@@ -74,6 +74,16 @@ function groupByDay(list: any[]) {
 
 function MeetingCard({ meeting, onEdit, onChanged }: { meeting: any; onEdit: () => void; onChanged: () => void }) {
   const [newTaskOpen, setNewTaskOpen] = useState(false);
+  const [linkedTasks, setLinkedTasks] = useState<any[]>([]);
+
+  const loadLinked = async () => {
+    const { data: links } = await supabase.from("meeting_tasks").select("task_id").eq("meeting_id", meeting.id);
+    const ids = (links ?? []).map((l) => l.task_id);
+    if (ids.length === 0) { setLinkedTasks([]); return; }
+    const { data: ts } = await supabase.from("tasks").select("id,title,status").in("id", ids);
+    setLinkedTasks(ts ?? []);
+  };
+  useEffect(() => { loadLinked(); }, [meeting.id]);
 
   const remove = async () => {
     if (!confirm("Excluir evento?")) return;
@@ -82,16 +92,35 @@ function MeetingCard({ meeting, onEdit, onChanged }: { meeting: any; onEdit: () 
     else { toast.success("Excluído"); onChanged(); }
   };
 
+  const onTaskSaved = async () => {
+    // link the most recent task from this user to this meeting
+    const { data: u } = await supabase.auth.getUser();
+    const { data: latest } = await supabase
+      .from("tasks").select("id").eq("user_id", u.user!.id)
+      .order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (latest) {
+      await supabase.from("meeting_tasks").insert({
+        meeting_id: meeting.id, task_id: latest.id, user_id: u.user!.id,
+      });
+    }
+    loadLinked();
+    onChanged();
+  };
+
   const start = new Date(meeting.start_at);
   const end = meeting.end_at ? new Date(meeting.end_at) : null;
+  const recLabel = { diaria: "Diária", semanal: "Semanal", mensal: "Mensal" }[meeting.recurrence as string];
 
   return (
     <div className="rounded-xl border bg-card p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-xs text-muted-foreground">
-            {start.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-            {end && ` – ${end.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`}
+          <p className="text-xs text-muted-foreground flex items-center gap-2">
+            <span>
+              {start.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+              {end && ` – ${end.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`}
+            </span>
+            {recLabel && <Badge variant="outline" className="gap-1"><Repeat className="size-3" />{recLabel}</Badge>}
           </p>
           <button onClick={onEdit} className="font-medium text-left hover:text-primary">{meeting.title}</button>
           {meeting.participants && (
@@ -100,6 +129,18 @@ function MeetingCard({ meeting, onEdit, onChanged }: { meeting: any; onEdit: () 
             </p>
           )}
           {meeting.objective && <p className="text-sm text-muted-foreground mt-1.5 line-clamp-2">{meeting.objective}</p>}
+
+          {linkedTasks.length > 0 && (
+            <div className="mt-2 space-y-1">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Tarefas vinculadas</p>
+              {linkedTasks.map((t) => (
+                <div key={t.id} className="text-xs flex items-center gap-1.5">
+                  <CheckSquare className="size-3 text-muted-foreground" />
+                  <span className={t.status === "concluido" ? "line-through text-muted-foreground" : ""}>{t.title}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <div className="flex gap-1">
           {meeting.meeting_link && (
@@ -118,7 +159,7 @@ function MeetingCard({ meeting, onEdit, onChanged }: { meeting: any; onEdit: () 
         open={newTaskOpen}
         onOpenChange={setNewTaskOpen}
         defaults={{ title: `[${meeting.title}] `, origin: "reuniao" } as any}
-        onSaved={onChanged}
+        onSaved={onTaskSaved}
       />
     </div>
   );
