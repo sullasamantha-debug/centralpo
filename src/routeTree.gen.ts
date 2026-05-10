@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedTasksRouteImport } from './routes/_authenticated/tasks'
+import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 
 const LoginRoute = LoginRouteImport.update({
@@ -34,6 +35,11 @@ const AuthenticatedTasksRoute = AuthenticatedTasksRouteImport.update({
   path: '/tasks',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedProductsRoute = AuthenticatedProductsRouteImport.update({
+  id: '/products',
+  path: '/products',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
   id: '/agenda',
   path: '/agenda',
@@ -44,11 +50,13 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
   '/agenda': typeof AuthenticatedAgendaRoute
+  '/products': typeof AuthenticatedProductsRoute
   '/tasks': typeof AuthenticatedTasksRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/agenda': typeof AuthenticatedAgendaRoute
+  '/products': typeof AuthenticatedProductsRoute
   '/tasks': typeof AuthenticatedTasksRoute
   '/': typeof AuthenticatedIndexRoute
 }
@@ -57,19 +65,21 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
+  '/_authenticated/products': typeof AuthenticatedProductsRoute
   '/_authenticated/tasks': typeof AuthenticatedTasksRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/agenda' | '/tasks'
+  fullPaths: '/' | '/login' | '/agenda' | '/products' | '/tasks'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/agenda' | '/tasks' | '/'
+  to: '/login' | '/agenda' | '/products' | '/tasks' | '/'
   id:
     | '__root__'
     | '/_authenticated'
     | '/login'
     | '/_authenticated/agenda'
+    | '/_authenticated/products'
     | '/_authenticated/tasks'
     | '/_authenticated/'
   fileRoutesById: FileRoutesById
@@ -109,6 +119,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTasksRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/products': {
+      id: '/_authenticated/products'
+      path: '/products'
+      fullPath: '/products'
+      preLoaderRoute: typeof AuthenticatedProductsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/agenda': {
       id: '/_authenticated/agenda'
       path: '/agenda'
@@ -121,12 +138,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAgendaRoute: typeof AuthenticatedAgendaRoute
+  AuthenticatedProductsRoute: typeof AuthenticatedProductsRoute
   AuthenticatedTasksRoute: typeof AuthenticatedTasksRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAgendaRoute: AuthenticatedAgendaRoute,
+  AuthenticatedProductsRoute: AuthenticatedProductsRoute,
   AuthenticatedTasksRoute: AuthenticatedTasksRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
