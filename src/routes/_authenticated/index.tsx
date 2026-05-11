@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Plus, Flame, Reply, AlertCircle, CalendarDays, Boxes } from "lucide-react";
 import { TaskCard } from "@/components/TaskCard";
 import { TaskDialog } from "@/components/TaskDialog";
+import { NoteDialog } from "@/components/NoteDialog";
+import { StickyNote, Plus as PlusIcon } from "lucide-react";
 import { todayISO } from "@/lib/constants";
 import { toast } from "sonner";
 
