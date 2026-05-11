@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      demand_types: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       meeting_tasks: {
         Row: {
           meeting_id: string
@@ -100,6 +121,88 @@ export type Database = {
           start_at?: string
           title?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notes: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: string
+          meeting_id: string | null
+          product_id: string | null
+          tags: string[] | null
+          task_id: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          meeting_id?: string | null
+          product_id?: string | null
+          tags?: string[] | null
+          task_id?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          meeting_id?: string | null
+          product_id?: string | null
+          tags?: string[] | null
+          task_id?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notes_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notes_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      origins: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
           user_id?: string
         }
         Relationships: []
@@ -200,7 +303,7 @@ export type Database = {
         Row: {
           completed_at: string | null
           created_at: string
-          demand_type: Database["public"]["Enums"]["task_demand_type"] | null
+          demand_type: string | null
           description: string | null
           due_date: string | null
           followup_owner: string | null
@@ -210,7 +313,7 @@ export type Database = {
           last_followup_note: string | null
           needs_response: boolean
           next_followup_date: string | null
-          origin: Database["public"]["Enums"]["task_origin"] | null
+          origin: string | null
           owner: string | null
           priority: Database["public"]["Enums"]["task_priority"]
           product_id: string | null
@@ -226,7 +329,7 @@ export type Database = {
         Insert: {
           completed_at?: string | null
           created_at?: string
-          demand_type?: Database["public"]["Enums"]["task_demand_type"] | null
+          demand_type?: string | null
           description?: string | null
           due_date?: string | null
           followup_owner?: string | null
@@ -236,7 +339,7 @@ export type Database = {
           last_followup_note?: string | null
           needs_response?: boolean
           next_followup_date?: string | null
-          origin?: Database["public"]["Enums"]["task_origin"] | null
+          origin?: string | null
           owner?: string | null
           priority?: Database["public"]["Enums"]["task_priority"]
           product_id?: string | null
@@ -252,7 +355,7 @@ export type Database = {
         Update: {
           completed_at?: string | null
           created_at?: string
-          demand_type?: Database["public"]["Enums"]["task_demand_type"] | null
+          demand_type?: string | null
           description?: string | null
           due_date?: string | null
           followup_owner?: string | null
@@ -262,7 +365,7 @@ export type Database = {
           last_followup_note?: string | null
           needs_response?: boolean
           next_followup_date?: string | null
-          origin?: Database["public"]["Enums"]["task_origin"] | null
+          origin?: string | null
           owner?: string | null
           priority?: Database["public"]["Enums"]["task_priority"]
           product_id?: string | null
