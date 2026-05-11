@@ -172,6 +172,7 @@ function Dashboard() {
       </div>
 
       <TaskDialog open={dlgOpen} onOpenChange={setDlgOpen} onSaved={load} />
+      <NoteDialog open={noteOpen} onOpenChange={setNoteOpen} />
     </div>
   );
 }
