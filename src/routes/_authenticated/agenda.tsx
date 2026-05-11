@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, ExternalLink, Users, Trash2, ListPlus, Repeat, CheckSquare } from "lucide-react";
 import { toast } from "sonner";
 import { TaskDialog } from "@/components/TaskDialog";
+import { NotesPanel } from "@/components/NotesPanel";
 
 export const Route = createFileRoute("/_authenticated/agenda")({
   component: AgendaPage,
@@ -257,6 +258,7 @@ function MeetingDialog({ open, onOpenChange, meeting, onSaved }: { open: boolean
           <div className="grid gap-2"><Label>Decisões</Label><Textarea rows={2} value={form.decisions ?? ""} onChange={(e) => set("decisions", e.target.value)} /></div>
           <div className="grid gap-2"><Label>Pendências</Label><Textarea rows={2} value={form.pendings ?? ""} onChange={(e) => set("pendings", e.target.value)} /></div>
           <div className="grid gap-2"><Label>Próximos passos</Label><Textarea rows={2} value={form.next_steps ?? ""} onChange={(e) => set("next_steps", e.target.value)} /></div>
+          {meeting?.id && <div className="pt-3 border-t"><NotesPanel meetingId={meeting.id} /></div>}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
