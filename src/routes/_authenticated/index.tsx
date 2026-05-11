@@ -3,9 +3,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Flame, Reply, AlertCircle, CalendarDays, Boxes } from "lucide-react";
+import { Plus, Flame, Reply, AlertCircle, CalendarDays, Boxes, StickyNote } from "lucide-react";
 import { TaskCard } from "@/components/TaskCard";
 import { TaskDialog } from "@/components/TaskDialog";
+import { NoteDialog } from "@/components/NoteDialog";
 import { todayISO } from "@/lib/constants";
 import { toast } from "sonner";
 
@@ -23,6 +24,7 @@ function Dashboard() {
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [quickTitle, setQuickTitle] = useState("");
   const [dlgOpen, setDlgOpen] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const today = todayISO();
@@ -76,7 +78,10 @@ function Dashboard() {
             {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
           </p>
         </div>
-        <Button onClick={() => setDlgOpen(true)}><Plus className="size-4" /> Nova tarefa</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setNoteOpen(true)}><StickyNote className="size-4" /> Nota</Button>
+          <Button onClick={() => setDlgOpen(true)}><Plus className="size-4" /> Nova tarefa</Button>
+        </div>
       </div>
 
       {/* Quick add */}
@@ -167,6 +172,7 @@ function Dashboard() {
       </div>
 
       <TaskDialog open={dlgOpen} onOpenChange={setDlgOpen} onSaved={load} />
+      <NoteDialog open={noteOpen} onOpenChange={setNoteOpen} />
     </div>
   );
 }

@@ -8,11 +8,13 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  STATUS_OPTIONS, PRIORITY_OPTIONS, DEMAND_OPTIONS, ORIGIN_OPTIONS, KIND_OPTIONS, CHANNEL_OPTIONS,
+  STATUS_OPTIONS, PRIORITY_OPTIONS, KIND_OPTIONS, CHANNEL_OPTIONS,
 } from "@/lib/constants";
+import { NotesPanel } from "@/components/NotesPanel";
 import { toast } from "sonner";
 
 type Product = { id: string; name: string };
+type Opt = { value: string; label: string };
 type Task = any;
 
 interface Props {
@@ -44,11 +46,19 @@ const empty = {
 export function TaskDialog({ open, onOpenChange, task, defaults, onSaved }: Props) {
   const [form, setForm] = useState<any>(empty);
   const [products, setProducts] = useState<Product[]>([]);
+  const [demandTypes, setDemandTypes] = useState<Opt[]>([]);
+  const [origins, setOrigins] = useState<Opt[]>([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     supabase.from("products").select("id,name").order("name").then(({ data }) => setProducts(data ?? []));
+    supabase.from("demand_types").select("name").order("name").then(({ data }) =>
+      setDemandTypes((data ?? []).map((d) => ({ value: d.name, label: d.name })))
+    );
+    supabase.from("origins").select("name").order("name").then(({ data }) =>
+      setOrigins((data ?? []).map((d) => ({ value: d.name, label: d.name })))
+    );
     if (task) {
       setForm({
         ...empty,
@@ -137,10 +147,10 @@ export function TaskDialog({ open, onOpenChange, task, defaults, onSaved }: Prop
               <SelectField value={form.kind} onValueChange={(v) => set("kind", v)} options={KIND_OPTIONS} />
             </Field>
             <Field label="Tipo de demanda">
-              <SelectField value={form.demand_type} onValueChange={(v) => set("demand_type", v)} options={DEMAND_OPTIONS} placeholder="—" />
+              <SelectField value={form.demand_type} onValueChange={(v) => set("demand_type", v)} options={demandTypes} placeholder="—" />
             </Field>
             <Field label="Origem">
-              <SelectField value={form.origin} onValueChange={(v) => set("origin", v)} options={ORIGIN_OPTIONS} placeholder="—" />
+              <SelectField value={form.origin} onValueChange={(v) => set("origin", v)} options={origins} placeholder="—" />
             </Field>
             <Field label="Responsável">
               <Input value={form.owner ?? ""} onChange={(e) => set("owner", e.target.value)} placeholder="Quem executa" />
@@ -166,6 +176,12 @@ export function TaskDialog({ open, onOpenChange, task, defaults, onSaved }: Prop
               <Field label="Resumo do retorno">
                 <Input value={form.response_summary ?? ""} onChange={(e) => set("response_summary", e.target.value)} />
               </Field>
+            </div>
+          )}
+
+          {task?.id && (
+            <div className="pt-3 border-t">
+              <NotesPanel taskId={task.id} />
             </div>
           )}
         </div>

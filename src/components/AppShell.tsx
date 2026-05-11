@@ -1,14 +1,16 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, CheckSquare, Calendar, Boxes, LogOut, Sparkles } from "lucide-react";
+import { LayoutDashboard, CheckSquare, Calendar, StickyNote, BarChart3, Settings, LogOut, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 const nav = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/", label: "Hoje", icon: LayoutDashboard },
   { to: "/tasks", label: "Tarefas", icon: CheckSquare },
+  { to: "/notes", label: "Notas", icon: StickyNote },
   { to: "/agenda", label: "Agenda", icon: Calendar },
-  { to: "/products", label: "Produtos", icon: Boxes },
+  { to: "/reports", label: "Relatórios", icon: BarChart3 },
+  { to: "/settings", label: "Configurações", icon: Settings },
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -20,6 +22,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     await signOut();
     navigate({ to: "/login" });
   };
+
+  const isActive = (to: string) => location.pathname === to || (to !== "/" && location.pathname.startsWith(to));
 
   return (
     <div className="min-h-screen bg-background">
@@ -34,23 +38,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         <nav className="flex-1 p-3 space-y-1">
-          {nav.map(({ to, label, icon: Icon }) => {
-            const active = location.pathname === to || (to !== "/" && location.pathname.startsWith(to));
-            return (
-              <Link
-                key={to}
-                to={to}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
-                  active
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
-                    : "hover:bg-sidebar-accent",
-                )}
-              >
-                <Icon className="size-4" /> {label}
-              </Link>
-            );
-          })}
+          {nav.map(({ to, label, icon: Icon }) => (
+            <Link
+              key={to}
+              to={to}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+                isActive(to)
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+                  : "hover:bg-sidebar-accent",
+              )}
+            >
+              <Icon className="size-4" /> {label}
+            </Link>
+          ))}
         </nav>
         <div className="p-3 border-t border-sidebar-border">
           <div className="flex items-center gap-2 px-2 py-2 mb-2">
@@ -83,16 +84,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Button variant="ghost" size="sm" onClick={handleSignOut}><LogOut className="size-4" /></Button>
       </header>
 
-      {/* Mobile nav */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-20 border-t bg-sidebar grid grid-cols-4">
-        {nav.map(({ to, label, icon: Icon }) => {
-          const active = location.pathname === to || (to !== "/" && location.pathname.startsWith(to));
-          return (
-            <Link key={to} to={to} className={cn("flex flex-col items-center gap-0.5 py-2 text-[10px]", active ? "text-primary" : "text-muted-foreground")}>
+      {/* Mobile bottom nav */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-20 border-t bg-sidebar overflow-x-auto">
+        <div className="flex min-w-max">
+          {nav.map(({ to, label, icon: Icon }) => (
+            <Link key={to} to={to} className={cn(
+              "flex flex-col items-center gap-0.5 py-2 px-4 text-[10px] flex-1 min-w-[64px]",
+              isActive(to) ? "text-primary" : "text-muted-foreground",
+            )}>
               <Icon className="size-5" /> {label}
             </Link>
-          );
-        })}
+          ))}
+        </div>
       </nav>
 
       <main className="md:pl-60 pb-20 md:pb-0">
