@@ -178,6 +178,12 @@ export function TaskDialog({ open, onOpenChange, task, defaults, onSaved }: Prop
               </Field>
             </div>
           )}
+
+          {task?.id && (
+            <div className="pt-3 border-t">
+              <NotesPanel taskId={task.id} />
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
