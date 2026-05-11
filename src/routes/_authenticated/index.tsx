@@ -3,11 +3,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Flame, Reply, AlertCircle, CalendarDays, Boxes } from "lucide-react";
+import { Plus, Flame, Reply, AlertCircle, CalendarDays, Boxes, StickyNote } from "lucide-react";
 import { TaskCard } from "@/components/TaskCard";
 import { TaskDialog } from "@/components/TaskDialog";
 import { NoteDialog } from "@/components/NoteDialog";
-import { StickyNote, Plus as PlusIcon } from "lucide-react";
 import { todayISO } from "@/lib/constants";
 import { toast } from "sonner";
 
@@ -25,6 +24,7 @@ function Dashboard() {
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [quickTitle, setQuickTitle] = useState("");
   const [dlgOpen, setDlgOpen] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const today = todayISO();
