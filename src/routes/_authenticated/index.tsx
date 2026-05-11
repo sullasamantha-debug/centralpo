@@ -78,7 +78,10 @@ function Dashboard() {
             {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
           </p>
         </div>
-        <Button onClick={() => setDlgOpen(true)}><Plus className="size-4" /> Nova tarefa</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setNoteOpen(true)}><StickyNote className="size-4" /> Nota</Button>
+          <Button onClick={() => setDlgOpen(true)}><Plus className="size-4" /> Nova tarefa</Button>
+        </div>
       </div>
 
       {/* Quick add */}
