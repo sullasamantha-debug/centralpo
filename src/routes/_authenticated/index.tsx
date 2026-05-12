@@ -3,12 +3,16 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Flame, Reply, AlertCircle, CalendarDays, Boxes, StickyNote } from "lucide-react";
+import { Plus, Flame, Reply, AlertCircle, CalendarDays, Boxes, StickyNote, ListTodo } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { TaskCard } from "@/components/TaskCard";
 import { TaskDialog } from "@/components/TaskDialog";
 import { NoteDialog } from "@/components/NoteDialog";
 import { todayISO } from "@/lib/constants";
 import { toast } from "sonner";
+
+const PRIORITY_RANK: Record<string, number> = { alta: 0, media: 1, baixa: 2 };
+type AllFilter = "todas" | "minhas" | "terceiros";
 
 export const Route = createFileRoute("/_authenticated/")({
   component: Dashboard,
