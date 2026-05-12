@@ -30,6 +30,9 @@ function Dashboard() {
   const [dlgOpen, setDlgOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [allFilter, setAllFilter] = useState<AllFilter>("todas");
+  const [showDone, setShowDone] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   const today = todayISO();
 
