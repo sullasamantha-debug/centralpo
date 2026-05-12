@@ -12,6 +12,7 @@ import { Plus, ExternalLink, Users, Trash2, ListPlus, Repeat, CheckSquare } from
 import { toast } from "sonner";
 import { TaskDialog } from "@/components/TaskDialog";
 import { NotesPanel } from "@/components/NotesPanel";
+import { generateOccurrences, WEEKDAYS_PT, type RecurrenceConfig } from "@/lib/recurrence";
 
 export const Route = createFileRoute("/_authenticated/agenda")({
   component: AgendaPage,
@@ -185,6 +186,12 @@ function MeetingDialog({ open, onOpenChange, meeting, onSaved }: { open: boolean
         pendings: meeting.pendings ?? "",
         next_steps: meeting.next_steps ?? "",
         recurrence: meeting.recurrence ?? "",
+        recurrence_interval: meeting.recurrence_interval ?? 1,
+        recurrence_days: meeting.recurrence_days ?? [],
+        recurrence_monthly_mode: meeting.recurrence_monthly_mode ?? "day_of_month",
+        recurrence_end_type: meeting.recurrence_end_type ?? "never",
+        recurrence_end_date: meeting.recurrence_end_date ?? "",
+        recurrence_count: meeting.recurrence_count ?? 10,
       });
     } else {
       const now = new Date(); now.setMinutes(0, 0, 0); now.setHours(now.getHours() + 1);
@@ -200,6 +207,12 @@ function MeetingDialog({ open, onOpenChange, meeting, onSaved }: { open: boolean
         pendings: "",
         next_steps: "",
         recurrence: "",
+        recurrence_interval: 1,
+        recurrence_days: [],
+        recurrence_monthly_mode: "day_of_month",
+        recurrence_end_type: "never",
+        recurrence_end_date: "",
+        recurrence_count: 10,
       });
     }
   }, [open, meeting]);
@@ -210,18 +223,68 @@ function MeetingDialog({ open, onOpenChange, meeting, onSaved }: { open: boolean
     if (!form.title?.trim() || !form.start_at) { toast.error("Título e início são obrigatórios"); return; }
     setSaving(true);
     const { data: u } = await supabase.auth.getUser();
+    const startDate = new Date(form.start_at);
+    const endDate = form.end_at ? new Date(form.end_at) : null;
+    const durationMs = endDate ? endDate.getTime() - startDate.getTime() : 0;
+    const hasRec = !!form.recurrence;
     const payload: any = {
-      ...form,
+      title: form.title,
+      participants: form.participants,
+      meeting_link: form.meeting_link,
+      objective: form.objective,
+      context: form.context,
+      decisions: form.decisions,
+      pendings: form.pendings,
+      next_steps: form.next_steps,
       recurrence: form.recurrence || null,
-      start_at: new Date(form.start_at).toISOString(),
-      end_at: form.end_at ? new Date(form.end_at).toISOString() : null,
+      recurrence_interval: hasRec ? Number(form.recurrence_interval) || 1 : null,
+      recurrence_days: hasRec && form.recurrence === "semanal" ? form.recurrence_days : null,
+      recurrence_monthly_mode: hasRec && form.recurrence === "mensal" ? form.recurrence_monthly_mode : null,
+      recurrence_end_type: hasRec ? form.recurrence_end_type : null,
+      recurrence_end_date: hasRec && form.recurrence_end_type === "date" ? form.recurrence_end_date : null,
+      recurrence_count: hasRec && form.recurrence_end_type === "count" ? Number(form.recurrence_count) || 1 : null,
+      start_at: startDate.toISOString(),
+      end_at: endDate ? endDate.toISOString() : null,
       user_id: u.user!.id,
     };
     let error;
+    let parentId: string | null = meeting?.id ?? null;
     if (meeting?.id) {
       ({ error } = await supabase.from("meetings").update(payload).eq("id", meeting.id));
     } else {
-      ({ error } = await supabase.from("meetings").insert(payload));
+      const { data: ins, error: insErr } = await supabase.from("meetings").insert(payload).select("id").single();
+      error = insErr;
+      parentId = ins?.id ?? null;
+    }
+    // Generate occurrences for new meetings only (avoid duplication on edit)
+    if (!error && !meeting?.id && hasRec && parentId) {
+      const cfg: RecurrenceConfig = {
+        recurrence: form.recurrence,
+        recurrence_interval: payload.recurrence_interval,
+        recurrence_days: payload.recurrence_days,
+        recurrence_monthly_mode: payload.recurrence_monthly_mode,
+        recurrence_end_type: payload.recurrence_end_type,
+        recurrence_end_date: payload.recurrence_end_date,
+        recurrence_count: payload.recurrence_count,
+      };
+      const occurrences = generateOccurrences(startDate, cfg);
+      if (occurrences.length > 0) {
+        const rows = occurrences.map((d) => ({
+          title: form.title,
+          start_at: d.toISOString(),
+          end_at: durationMs ? new Date(d.getTime() + durationMs).toISOString() : null,
+          participants: form.participants,
+          meeting_link: form.meeting_link,
+          objective: form.objective,
+          context: form.context,
+          recurrence: null,
+          parent_meeting_id: parentId,
+          user_id: u.user!.id,
+        }));
+        const { error: occErr } = await supabase.from("meetings").insert(rows);
+        if (occErr) toast.error("Falha ao gerar ocorrências: " + occErr.message);
+        else toast.success(`${occurrences.length} ocorrências geradas`);
+      }
     }
     setSaving(false);
     if (error) toast.error(error.message);
@@ -251,6 +314,75 @@ function MeetingDialog({ open, onOpenChange, meeting, onSaved }: { open: boolean
                 </SelectContent>
               </Select>
             </div>
+
+            {form.recurrence && (
+              <div className="col-span-2 grid gap-3 rounded-lg border bg-muted/30 p-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="grid gap-1.5">
+                    <Label className="text-xs">
+                      Repetir a cada {form.recurrence === "diaria" ? "(dias)" : form.recurrence === "semanal" ? "(semanas)" : "(meses)"}
+                    </Label>
+                    <Input type="number" min={1} value={form.recurrence_interval ?? 1} onChange={(e) => set("recurrence_interval", e.target.value)} />
+                  </div>
+                </div>
+
+                {form.recurrence === "semanal" && (
+                  <div className="grid gap-1.5">
+                    <Label className="text-xs">Dias da semana</Label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {WEEKDAYS_PT.map((d) => {
+                        const sel = (form.recurrence_days ?? []).includes(d.key);
+                        return (
+                          <Button key={d.key} type="button" size="sm" variant={sel ? "default" : "outline"}
+                            className="h-7 px-2.5 text-xs"
+                            onClick={() => {
+                              const cur: string[] = form.recurrence_days ?? [];
+                              set("recurrence_days", sel ? cur.filter((x) => x !== d.key) : [...cur, d.key]);
+                            }}>
+                            {d.label}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {form.recurrence === "mensal" && (
+                  <div className="grid gap-1.5">
+                    <Label className="text-xs">Padrão mensal</Label>
+                    <Select value={form.recurrence_monthly_mode} onValueChange={(v) => set("recurrence_monthly_mode", v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="day_of_month">No mesmo dia do mês</SelectItem>
+                        <SelectItem value="weekday_of_month">No mesmo dia da semana (ex: 2ª segunda)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <div className="grid gap-1.5">
+                  <Label className="text-xs">Termina</Label>
+                  <Select value={form.recurrence_end_type} onValueChange={(v) => set("recurrence_end_type", v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="never">Nunca</SelectItem>
+                      <SelectItem value="date">Em uma data</SelectItem>
+                      <SelectItem value="count">Após X ocorrências</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {form.recurrence_end_type === "date" && (
+                    <Input type="date" value={form.recurrence_end_date ?? ""} onChange={(e) => set("recurrence_end_date", e.target.value)} />
+                  )}
+                  {form.recurrence_end_type === "count" && (
+                    <Input type="number" min={1} value={form.recurrence_count ?? 1} onChange={(e) => set("recurrence_count", e.target.value)} placeholder="Número de ocorrências" />
+                  )}
+                </div>
+
+                {meeting?.id && (
+                  <p className="text-xs text-muted-foreground">As ocorrências futuras são geradas apenas na criação. Para alterar a série, exclua e recrie.</p>
+                )}
+              </div>
+            )}
           </div>
           <p className="text-xs uppercase tracking-wider text-muted-foreground mt-2">Notas da reunião</p>
           <div className="grid gap-2"><Label>Objetivo</Label><Textarea rows={2} value={form.objective ?? ""} onChange={(e) => set("objective", e.target.value)} placeholder="O que se espera alcançar" /></div>

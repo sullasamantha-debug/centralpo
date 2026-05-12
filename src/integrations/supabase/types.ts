@@ -79,9 +79,16 @@ export type Database = {
           meeting_link: string | null
           next_steps: string | null
           objective: string | null
+          parent_meeting_id: string | null
           participants: string | null
           pendings: string | null
           recurrence: string | null
+          recurrence_count: number | null
+          recurrence_days: string[] | null
+          recurrence_end_date: string | null
+          recurrence_end_type: string | null
+          recurrence_interval: number | null
+          recurrence_monthly_mode: string | null
           start_at: string
           title: string
           updated_at: string
@@ -97,9 +104,16 @@ export type Database = {
           meeting_link?: string | null
           next_steps?: string | null
           objective?: string | null
+          parent_meeting_id?: string | null
           participants?: string | null
           pendings?: string | null
           recurrence?: string | null
+          recurrence_count?: number | null
+          recurrence_days?: string[] | null
+          recurrence_end_date?: string | null
+          recurrence_end_type?: string | null
+          recurrence_interval?: number | null
+          recurrence_monthly_mode?: string | null
           start_at: string
           title: string
           updated_at?: string
@@ -115,9 +129,16 @@ export type Database = {
           meeting_link?: string | null
           next_steps?: string | null
           objective?: string | null
+          parent_meeting_id?: string | null
           participants?: string | null
           pendings?: string | null
           recurrence?: string | null
+          recurrence_count?: number | null
+          recurrence_days?: string[] | null
+          recurrence_end_date?: string | null
+          recurrence_end_type?: string | null
+          recurrence_interval?: number | null
+          recurrence_monthly_mode?: string | null
           start_at?: string
           title?: string
           updated_at?: string

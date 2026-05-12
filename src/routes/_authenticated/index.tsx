@@ -3,12 +3,16 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Flame, Reply, AlertCircle, CalendarDays, Boxes, StickyNote } from "lucide-react";
+import { Plus, Flame, Reply, AlertCircle, CalendarDays, Boxes, StickyNote, ListTodo } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { TaskCard } from "@/components/TaskCard";
 import { TaskDialog } from "@/components/TaskDialog";
 import { NoteDialog } from "@/components/NoteDialog";
 import { todayISO } from "@/lib/constants";
 import { toast } from "sonner";
+
+const PRIORITY_RANK: Record<string, number> = { alta: 0, media: 1, baixa: 2 };
+type AllFilter = "todas" | "minhas" | "terceiros";
 
 export const Route = createFileRoute("/_authenticated/")({
   component: Dashboard,
@@ -26,6 +30,9 @@ function Dashboard() {
   const [dlgOpen, setDlgOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [allFilter, setAllFilter] = useState<AllFilter>("todas");
+  const [showDone, setShowDone] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   const today = todayISO();
 
@@ -60,6 +67,24 @@ function Dashboard() {
     const late = list.filter((t) => t.due_date && t.due_date < today).length;
     return { ...p, total: list.length, late };
   });
+
+  const allTasksBase = (showDone ? tasks : open).filter((t) => {
+    if (allFilter === "minhas") return t.kind === "minha" || t.kind === "ambos";
+    if (allFilter === "terceiros") return t.status === "aguardando_terceiros";
+    return true;
+  });
+  const allTasksSorted = [...allTasksBase].sort((a, b) => {
+    const pa = PRIORITY_RANK[a.priority] ?? 9;
+    const pb = PRIORITY_RANK[b.priority] ?? 9;
+    if (pa !== pb) return pa - pb;
+    const da = a.due_date ?? "9999-99-99";
+    const db = b.due_date ?? "9999-99-99";
+    if (da !== db) return da.localeCompare(db);
+    const fa = a.next_followup_date ?? "9999-99-99";
+    const fb = b.next_followup_date ?? "9999-99-99";
+    return fa.localeCompare(fb);
+  });
+  const allTasksVisible = showAll ? allTasksSorted : allTasksSorted.slice(0, 5);
 
   const quickCreate = async () => {
     if (!quickTitle.trim()) return;
@@ -145,6 +170,40 @@ function Dashboard() {
           ))}
           {hoje.map((t) => <TaskCard key={t.id} task={t} product={productMap.get(t.product_id)} onChanged={load} />)}
         </Section>
+      </div>
+
+      {/* Minhas tarefas */}
+      <div className="rounded-2xl border bg-card/50 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <h2 className="text-sm font-semibold flex items-center gap-2">
+            <ListTodo className="size-4" /> Minhas tarefas
+            <span className="text-xs text-muted-foreground font-normal">({allTasksSorted.length})</span>
+          </h2>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {(["todas","minhas","terceiros"] as AllFilter[]).map((f) => (
+              <Button key={f} size="sm" variant={allFilter === f ? "default" : "outline"} onClick={() => setAllFilter(f)} className="h-7 text-xs">
+                {f === "todas" ? "Todas" : f === "minhas" ? "Minhas" : "Aguardando terceiros"}
+              </Button>
+            ))}
+            <Button size="sm" variant={showDone ? "default" : "outline"} onClick={() => setShowDone((v) => !v)} className="h-7 text-xs">
+              {showDone ? "Ocultar concluídas" : "Mostrar concluídas"}
+            </Button>
+          </div>
+        </div>
+        <div className="space-y-2">
+          {allTasksVisible.length === 0
+            ? <p className="text-sm text-muted-foreground py-2">Nenhuma tarefa.</p>
+            : allTasksVisible.map((t) => <TaskCard key={t.id} task={t} product={productMap.get(t.product_id)} onChanged={load} />)
+          }
+        </div>
+        {allTasksSorted.length > 5 && (
+          <div className="flex justify-between items-center mt-3">
+            <Button variant="ghost" size="sm" onClick={() => setShowAll((v) => !v)}>
+              {showAll ? "Mostrar menos" : `Ver todas (${allTasksSorted.length})`}
+            </Button>
+            <Link to="/tasks" className="text-xs text-primary hover:underline">Ir para Tarefas →</Link>
+          </div>
+        )}
       </div>
 
       {/* Visão por produto */}
