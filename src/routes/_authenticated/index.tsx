@@ -68,6 +68,24 @@ function Dashboard() {
     return { ...p, total: list.length, late };
   });
 
+  const allTasksBase = (showDone ? tasks : open).filter((t) => {
+    if (allFilter === "minhas") return t.kind === "minha" || t.kind === "ambos";
+    if (allFilter === "terceiros") return t.status === "aguardando_terceiros";
+    return true;
+  });
+  const allTasksSorted = [...allTasksBase].sort((a, b) => {
+    const pa = PRIORITY_RANK[a.priority] ?? 9;
+    const pb = PRIORITY_RANK[b.priority] ?? 9;
+    if (pa !== pb) return pa - pb;
+    const da = a.due_date ?? "9999-99-99";
+    const db = b.due_date ?? "9999-99-99";
+    if (da !== db) return da.localeCompare(db);
+    const fa = a.next_followup_date ?? "9999-99-99";
+    const fb = b.next_followup_date ?? "9999-99-99";
+    return fa.localeCompare(fb);
+  });
+  const allTasksVisible = showAll ? allTasksSorted : allTasksSorted.slice(0, 5);
+
   const quickCreate = async () => {
     if (!quickTitle.trim()) return;
     const { data: u } = await supabase.auth.getUser();
