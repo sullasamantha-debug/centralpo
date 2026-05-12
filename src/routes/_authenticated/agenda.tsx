@@ -12,6 +12,8 @@ import { Plus, ExternalLink, Users, Trash2, ListPlus, Repeat, CheckSquare } from
 import { toast } from "sonner";
 import { TaskDialog } from "@/components/TaskDialog";
 import { NotesPanel } from "@/components/NotesPanel";
+import { generateOccurrences, WEEKDAYS_PT, type RecurrenceConfig } from "@/lib/recurrence";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export const Route = createFileRoute("/_authenticated/agenda")({
   component: AgendaPage,
