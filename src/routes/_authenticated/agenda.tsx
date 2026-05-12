@@ -224,18 +224,68 @@ function MeetingDialog({ open, onOpenChange, meeting, onSaved }: { open: boolean
     if (!form.title?.trim() || !form.start_at) { toast.error("Título e início são obrigatórios"); return; }
     setSaving(true);
     const { data: u } = await supabase.auth.getUser();
+    const startDate = new Date(form.start_at);
+    const endDate = form.end_at ? new Date(form.end_at) : null;
+    const durationMs = endDate ? endDate.getTime() - startDate.getTime() : 0;
+    const hasRec = !!form.recurrence;
     const payload: any = {
-      ...form,
+      title: form.title,
+      participants: form.participants,
+      meeting_link: form.meeting_link,
+      objective: form.objective,
+      context: form.context,
+      decisions: form.decisions,
+      pendings: form.pendings,
+      next_steps: form.next_steps,
       recurrence: form.recurrence || null,
-      start_at: new Date(form.start_at).toISOString(),
-      end_at: form.end_at ? new Date(form.end_at).toISOString() : null,
+      recurrence_interval: hasRec ? Number(form.recurrence_interval) || 1 : null,
+      recurrence_days: hasRec && form.recurrence === "semanal" ? form.recurrence_days : null,
+      recurrence_monthly_mode: hasRec && form.recurrence === "mensal" ? form.recurrence_monthly_mode : null,
+      recurrence_end_type: hasRec ? form.recurrence_end_type : null,
+      recurrence_end_date: hasRec && form.recurrence_end_type === "date" ? form.recurrence_end_date : null,
+      recurrence_count: hasRec && form.recurrence_end_type === "count" ? Number(form.recurrence_count) || 1 : null,
+      start_at: startDate.toISOString(),
+      end_at: endDate ? endDate.toISOString() : null,
       user_id: u.user!.id,
     };
     let error;
+    let parentId: string | null = meeting?.id ?? null;
     if (meeting?.id) {
       ({ error } = await supabase.from("meetings").update(payload).eq("id", meeting.id));
     } else {
-      ({ error } = await supabase.from("meetings").insert(payload));
+      const { data: ins, error: insErr } = await supabase.from("meetings").insert(payload).select("id").single();
+      error = insErr;
+      parentId = ins?.id ?? null;
+    }
+    // Generate occurrences for new meetings only (avoid duplication on edit)
+    if (!error && !meeting?.id && hasRec && parentId) {
+      const cfg: RecurrenceConfig = {
+        recurrence: form.recurrence,
+        recurrence_interval: payload.recurrence_interval,
+        recurrence_days: payload.recurrence_days,
+        recurrence_monthly_mode: payload.recurrence_monthly_mode,
+        recurrence_end_type: payload.recurrence_end_type,
+        recurrence_end_date: payload.recurrence_end_date,
+        recurrence_count: payload.recurrence_count,
+      };
+      const occurrences = generateOccurrences(startDate, cfg);
+      if (occurrences.length > 0) {
+        const rows = occurrences.map((d) => ({
+          title: form.title,
+          start_at: d.toISOString(),
+          end_at: durationMs ? new Date(d.getTime() + durationMs).toISOString() : null,
+          participants: form.participants,
+          meeting_link: form.meeting_link,
+          objective: form.objective,
+          context: form.context,
+          recurrence: null,
+          parent_meeting_id: parentId,
+          user_id: u.user!.id,
+        }));
+        const { error: occErr } = await supabase.from("meetings").insert(rows);
+        if (occErr) toast.error("Falha ao gerar ocorrências: " + occErr.message);
+        else toast.success(`${occurrences.length} ocorrências geradas`);
+      }
     }
     setSaving(false);
     if (error) toast.error(error.message);
