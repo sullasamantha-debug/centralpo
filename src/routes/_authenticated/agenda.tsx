@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,12 +7,125 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { Plus, ExternalLink, Users, Trash2, ListPlus, Repeat, CheckSquare } from "lucide-react";
 import { toast } from "sonner";
 import { TaskDialog } from "@/components/TaskDialog";
 import { NotesPanel } from "@/components/NotesPanel";
 import { generateOccurrences, WEEKDAYS_PT, type RecurrenceConfig } from "@/lib/recurrence";
+
+const SERIES_HORIZON_DAYS = 90;
+const SERIES_MAX_OCCURRENCES = 365;
+
+type MeetingRecord = {
+  id: string;
+  title: string;
+  start_at: string;
+  end_at: string | null;
+  participants: string | null;
+  meeting_link: string | null;
+  objective: string | null;
+  context: string | null;
+  decisions: string | null;
+  pendings: string | null;
+  next_steps: string | null;
+  recurrence: RecurrenceConfig["recurrence"];
+  recurrence_interval: number | null;
+  recurrence_days: string[] | null;
+  recurrence_monthly_mode: string | null;
+  recurrence_end_type: string | null;
+  recurrence_end_date: string | null;
+  recurrence_count: number | null;
+  parent_meeting_id: string | null;
+  user_id: string;
+};
+
+type SeriesEditScope = "single" | "future" | "all";
+type SeriesDeleteScope = "single" | "future" | "all";
+
+function addDays(date: Date, days: number) {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
+function getSeriesRootId(meeting: MeetingRecord | null | undefined) {
+  if (!meeting) return null;
+  return meeting.parent_meeting_id ?? meeting.id;
+}
+
+function getSeriesConfig(source: Partial<MeetingRecord> | Record<string, any>): RecurrenceConfig {
+  return {
+    recurrence: (source.recurrence as RecurrenceConfig["recurrence"]) ?? null,
+    recurrence_interval: source.recurrence_interval ?? 1,
+    recurrence_days: source.recurrence_days ?? null,
+    recurrence_monthly_mode: source.recurrence_monthly_mode ?? null,
+    recurrence_end_type: source.recurrence_end_type ?? null,
+    recurrence_end_date: source.recurrence_end_date ?? null,
+    recurrence_count: source.recurrence_count ?? null,
+  };
+}
+
+function getOccurrenceRows(params: {
+  source: MeetingRecord;
+  rootId: string;
+  overrides?: Partial<MeetingRecord>;
+  startFrom?: Date;
+}) {
+  const start = new Date(params.overrides?.start_at ?? params.source.start_at);
+  const end = params.overrides?.end_at === null
+    ? null
+    : new Date(params.overrides?.end_at ?? params.source.end_at ?? "");
+  const durationMs = end && !Number.isNaN(end.getTime()) ? end.getTime() - start.getTime() : 0;
+  const cfg = getSeriesConfig({ ...params.source, ...params.overrides });
+  const occurrences = generateOccurrences(start, cfg, {
+    until: addDays(start, SERIES_HORIZON_DAYS),
+    maxOccurrences: SERIES_MAX_OCCURRENCES,
+  });
+  const filtered = params.startFrom
+    ? occurrences.filter((occ) => occ.getTime() >= params.startFrom!.getTime())
+    : occurrences;
+
+  return filtered.map((date) => ({
+    title: params.overrides?.title ?? params.source.title,
+    start_at: date.toISOString(),
+    end_at: durationMs ? new Date(date.getTime() + durationMs).toISOString() : null,
+    participants: params.overrides?.participants ?? params.source.participants,
+    meeting_link: params.overrides?.meeting_link ?? params.source.meeting_link,
+    objective: params.overrides?.objective ?? params.source.objective,
+    context: params.overrides?.context ?? params.source.context,
+    decisions: params.overrides?.decisions ?? params.source.decisions,
+    pendings: params.overrides?.pendings ?? params.source.pendings,
+    next_steps: params.overrides?.next_steps ?? params.source.next_steps,
+    recurrence: null,
+    recurrence_interval: null,
+    recurrence_days: null,
+    recurrence_monthly_mode: null,
+    recurrence_end_type: null,
+    recurrence_end_date: null,
+    recurrence_count: null,
+    parent_meeting_id: params.rootId,
+    user_id: params.source.user_id,
+  }));
+}
+
+async function getSeriesMeetings(rootId: string) {
+  const { data, error } = await supabase
+    .from("meetings")
+    .select("*")
+    .or(`id.eq.${rootId},parent_meeting_id.eq.${rootId}`)
+    .order("start_at", { ascending: true });
+
+  if (error) throw error;
+  return (data ?? []) as MeetingRecord[];
+}
+
+async function deleteMeetingLinks(meetingIds: string[]) {
+  if (meetingIds.length === 0) return;
+  const { error } = await supabase.from("meeting_tasks").delete().in("meeting_id", meetingIds);
+  if (error) throw error;
+}
 
 export const Route = createFileRoute("/_authenticated/agenda")({
   component: AgendaPage,
