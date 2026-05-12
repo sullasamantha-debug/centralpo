@@ -11,6 +11,11 @@ export type RecurrenceConfig = {
   recurrence_count?: number | null;
 };
 
+export type GenerateOccurrencesOptions = {
+  until?: Date;
+  maxOccurrences?: number;
+};
+
 const WEEKDAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 export const WEEKDAYS_PT: { key: string; label: string }[] = [
   { key: "mon", label: "Seg" },
@@ -23,7 +28,7 @@ export const WEEKDAYS_PT: { key: string; label: string }[] = [
 ];
 
 // Hard cap to avoid infinite loops on "never" end type.
-const MAX_OCCURRENCES = 200;
+const MAX_OCCURRENCES = 1500;
 const MAX_HORIZON_DAYS = 365 * 2;
 
 function addDays(d: Date, n: number) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
@@ -42,19 +47,24 @@ function nthWeekdayOfMonth(year: number, month: number, weekday: number, n: numb
  * Generate occurrence start times AFTER the seed, based on config.
  * Returns Date[] of additional occurrences (does not include the seed itself).
  */
-export function generateOccurrences(seed: Date, cfg: RecurrenceConfig): Date[] {
+export function generateOccurrences(
+  seed: Date,
+  cfg: RecurrenceConfig,
+  options: GenerateOccurrencesOptions = {},
+): Date[] {
   if (!cfg.recurrence) return [];
   const interval = Math.max(1, cfg.recurrence_interval ?? 1);
   const endType = cfg.recurrence_end_type ?? "never";
   const endDate = cfg.recurrence_end_date ? new Date(cfg.recurrence_end_date + "T23:59:59") : null;
+  const maxOccurrences = Math.max(1, options.maxOccurrences ?? MAX_OCCURRENCES);
   // Total includes the seed; so additional = count - 1
-  const targetCount = endType === "count" ? Math.max(1, (cfg.recurrence_count ?? 1)) - 1 : MAX_OCCURRENCES;
-  const horizonEnd = addDays(seed, MAX_HORIZON_DAYS);
+  const targetCount = endType === "count" ? Math.max(1, (cfg.recurrence_count ?? 1)) - 1 : maxOccurrences;
+  const horizonEnd = options.until ?? addDays(seed, MAX_HORIZON_DAYS);
 
   const results: Date[] = [];
 
   const shouldStop = (d: Date) => {
-    if (results.length >= MAX_OCCURRENCES) return true;
+    if (results.length >= maxOccurrences) return true;
     if (results.length >= targetCount) return true;
     if (endDate && d > endDate) return true;
     if (d > horizonEnd) return true;
@@ -84,7 +94,7 @@ export function generateOccurrences(seed: Date, cfg: RecurrenceConfig): Date[] {
         results.push(occ);
       }
       if (pushed) break;
-      if (results.length >= targetCount || results.length >= MAX_OCCURRENCES) break;
+      if (results.length >= targetCount || results.length >= maxOccurrences) break;
       weekIdx++;
       if (weekIdx > 520) break; // 10y safety
     }
