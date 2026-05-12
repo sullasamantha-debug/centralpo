@@ -172,6 +172,40 @@ function Dashboard() {
         </Section>
       </div>
 
+      {/* Minhas tarefas */}
+      <div className="rounded-2xl border bg-card/50 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <h2 className="text-sm font-semibold flex items-center gap-2">
+            <ListTodo className="size-4" /> Minhas tarefas
+            <span className="text-xs text-muted-foreground font-normal">({allTasksSorted.length})</span>
+          </h2>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {(["todas","minhas","terceiros"] as AllFilter[]).map((f) => (
+              <Button key={f} size="sm" variant={allFilter === f ? "default" : "outline"} onClick={() => setAllFilter(f)} className="h-7 text-xs">
+                {f === "todas" ? "Todas" : f === "minhas" ? "Minhas" : "Aguardando terceiros"}
+              </Button>
+            ))}
+            <Button size="sm" variant={showDone ? "default" : "outline"} onClick={() => setShowDone((v) => !v)} className="h-7 text-xs">
+              {showDone ? "Ocultar concluídas" : "Mostrar concluídas"}
+            </Button>
+          </div>
+        </div>
+        <div className="space-y-2">
+          {allTasksVisible.length === 0
+            ? <p className="text-sm text-muted-foreground py-2">Nenhuma tarefa.</p>
+            : allTasksVisible.map((t) => <TaskCard key={t.id} task={t} product={productMap.get(t.product_id)} onChanged={load} />)
+          }
+        </div>
+        {allTasksSorted.length > 5 && (
+          <div className="flex justify-between items-center mt-3">
+            <Button variant="ghost" size="sm" onClick={() => setShowAll((v) => !v)}>
+              {showAll ? "Mostrar menos" : `Ver todas (${allTasksSorted.length})`}
+            </Button>
+            <Link to="/tasks" className="text-xs text-primary hover:underline">Ir para Tarefas →</Link>
+          </div>
+        )}
+      </div>
+
       {/* Visão por produto */}
       <div>
         <h2 className="text-sm font-semibold flex items-center gap-2 mb-3">
