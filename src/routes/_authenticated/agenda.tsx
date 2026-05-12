@@ -187,6 +187,12 @@ function MeetingDialog({ open, onOpenChange, meeting, onSaved }: { open: boolean
         pendings: meeting.pendings ?? "",
         next_steps: meeting.next_steps ?? "",
         recurrence: meeting.recurrence ?? "",
+        recurrence_interval: meeting.recurrence_interval ?? 1,
+        recurrence_days: meeting.recurrence_days ?? [],
+        recurrence_monthly_mode: meeting.recurrence_monthly_mode ?? "day_of_month",
+        recurrence_end_type: meeting.recurrence_end_type ?? "never",
+        recurrence_end_date: meeting.recurrence_end_date ?? "",
+        recurrence_count: meeting.recurrence_count ?? 10,
       });
     } else {
       const now = new Date(); now.setMinutes(0, 0, 0); now.setHours(now.getHours() + 1);
@@ -202,6 +208,12 @@ function MeetingDialog({ open, onOpenChange, meeting, onSaved }: { open: boolean
         pendings: "",
         next_steps: "",
         recurrence: "",
+        recurrence_interval: 1,
+        recurrence_days: [],
+        recurrence_monthly_mode: "day_of_month",
+        recurrence_end_type: "never",
+        recurrence_end_date: "",
+        recurrence_count: 10,
       });
     }
   }, [open, meeting]);
