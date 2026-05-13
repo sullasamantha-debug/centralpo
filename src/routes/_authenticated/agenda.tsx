@@ -38,6 +38,8 @@ type MeetingRecord = {
   recurrence_end_date: string | null;
   recurrence_count: number | null;
   parent_meeting_id: string | null;
+  completed_at: string | null;
+  occurred: boolean | null;
   user_id: string;
 };
 
