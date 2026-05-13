@@ -603,6 +603,28 @@ function MeetingCard({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={completeOpen} onOpenChange={setCompleteOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Concluir evento</DialogTitle>
+          </DialogHeader>
+          <div className="py-2 text-sm text-muted-foreground">
+            O evento ocorreu?
+          </div>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
+            <Button variant="outline" onClick={() => setCompleteOpen(false)} disabled={completing}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={() => completeMeeting(false)} disabled={completing}>
+              Não realizado
+            </Button>
+            <Button onClick={() => completeMeeting(true)} disabled={completing}>
+              <Check className="size-4" /> Realizado
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
