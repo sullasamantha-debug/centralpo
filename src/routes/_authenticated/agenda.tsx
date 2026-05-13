@@ -522,16 +522,28 @@ function MeetingCard({
           </div>
 
           <div className="flex gap-1">
-            {meeting.meeting_link && (
+            {meeting.meeting_link && !isCompleted && (
               <Button asChild size="sm" variant="outline">
                 <a href={meeting.meeting_link} target="_blank" rel="noreferrer">
                   <ExternalLink className="size-3.5" /> Entrar
                 </a>
               </Button>
             )}
-            <Button size="sm" variant="ghost" onClick={() => setNewTaskOpen(true)}>
-              <ListPlus className="size-3.5" /> Tarefa
-            </Button>
+            {!isCompleted && (
+              <>
+                <Button size="sm" variant="default" onClick={() => setCompleteOpen(true)} title="Concluir">
+                  <Check className="size-3.5" /> Concluir
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setNewTaskOpen(true)}>
+                  <ListPlus className="size-3.5" /> Tarefa
+                </Button>
+              </>
+            )}
+            {isCompleted && (
+              <Button size="sm" variant="outline" onClick={reopenMeeting}>
+                Reabrir
+              </Button>
+            )}
             <Button size="icon" variant="ghost" onClick={() => setDeleteOpen(true)}>
               <Trash2 className="size-4 text-destructive" />
             </Button>
