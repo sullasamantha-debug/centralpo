@@ -471,7 +471,7 @@ function MeetingCard({
 
   return (
     <>
-      <div className="rounded-xl border bg-card p-4">
+      <div className={`rounded-xl border bg-card p-4 ${isCompleted ? "opacity-60" : ""}`}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
