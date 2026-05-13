@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { Plus, ExternalLink, Users, Trash2, ListPlus, Repeat, CheckSquare } from "lucide-react";
+import { Plus, ExternalLink, Users, Trash2, ListPlus, Repeat, CheckSquare, Check, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { TaskDialog } from "@/components/TaskDialog";
 import { NotesPanel } from "@/components/NotesPanel";
