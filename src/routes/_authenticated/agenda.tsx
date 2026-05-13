@@ -307,9 +307,43 @@ function MeetingCard({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteScope, setDeleteScope] = useState<SeriesDeleteScope>("single");
   const [deleting, setDeleting] = useState(false);
+  const [completeOpen, setCompleteOpen] = useState(false);
+  const [completing, setCompleting] = useState(false);
 
+  const isCompleted = Boolean(meeting.completed_at);
   const isSeriesMember = Boolean(meeting.recurrence || meeting.parent_meeting_id);
   const isGeneratedOccurrence = Boolean(meeting.parent_meeting_id);
+
+  const completeMeeting = async (occurred: boolean) => {
+    setCompleting(true);
+    try {
+      const { error } = await supabase
+        .from("meetings")
+        .update({ completed_at: new Date().toISOString(), occurred })
+        .eq("id", meeting.id);
+      if (error) throw error;
+      toast.success(occurred ? "Evento marcado como realizado" : "Evento marcado como não realizado");
+      setCompleteOpen(false);
+      onChanged();
+    } catch (error: any) {
+      toast.error(error.message ?? "Não foi possível concluir o evento");
+    } finally {
+      setCompleting(false);
+    }
+  };
+
+  const reopenMeeting = async () => {
+    const { error } = await supabase
+      .from("meetings")
+      .update({ completed_at: null, occurred: null })
+      .eq("id", meeting.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Evento reaberto");
+    onChanged();
+  };
 
   useEffect(() => {
     setDeleteScope(isSeriesMember ? "single" : "all");
