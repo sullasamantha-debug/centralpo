@@ -70,6 +70,7 @@ export type Database = {
       }
       meetings: {
         Row: {
+          completed_at: string | null
           context: string | null
           created_at: string
           decisions: string | null
@@ -79,6 +80,7 @@ export type Database = {
           meeting_link: string | null
           next_steps: string | null
           objective: string | null
+          occurred: boolean | null
           parent_meeting_id: string | null
           participants: string | null
           pendings: string | null
@@ -95,6 +97,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          completed_at?: string | null
           context?: string | null
           created_at?: string
           decisions?: string | null
@@ -104,6 +107,7 @@ export type Database = {
           meeting_link?: string | null
           next_steps?: string | null
           objective?: string | null
+          occurred?: boolean | null
           parent_meeting_id?: string | null
           participants?: string | null
           pendings?: string | null
@@ -120,6 +124,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          completed_at?: string | null
           context?: string | null
           created_at?: string
           decisions?: string | null
@@ -129,6 +134,7 @@ export type Database = {
           meeting_link?: string | null
           next_steps?: string | null
           objective?: string | null
+          occurred?: boolean | null
           parent_meeting_id?: string | null
           participants?: string | null
           pendings?: string | null
