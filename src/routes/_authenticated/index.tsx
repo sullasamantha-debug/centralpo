@@ -42,6 +42,7 @@ function Dashboard() {
       supabase.from("products").select("*").order("name"),
       supabase.from("meetings")
         .select("*")
+        .is("completed_at", null)
         .gte("start_at", today + "T00:00:00")
         .lt("start_at", today + "T23:59:59")
         .order("start_at"),

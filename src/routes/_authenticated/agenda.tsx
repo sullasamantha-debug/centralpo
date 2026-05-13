@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { Plus, ExternalLink, Users, Trash2, ListPlus, Repeat, CheckSquare } from "lucide-react";
+import { Plus, ExternalLink, Users, Trash2, ListPlus, Repeat, CheckSquare, Check, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { TaskDialog } from "@/components/TaskDialog";
 import { NotesPanel } from "@/components/NotesPanel";
@@ -38,6 +38,8 @@ type MeetingRecord = {
   recurrence_end_date: string | null;
   recurrence_count: number | null;
   parent_meeting_id: string | null;
+  completed_at: string | null;
+  occurred: boolean | null;
   user_id: string;
 };
 
@@ -218,6 +220,7 @@ function AgendaPage() {
   const [meetings, setMeetings] = useState<MeetingRecord[]>([]);
   const [editing, setEditing] = useState<MeetingRecord | null>(null);
   const [open, setOpen] = useState(false);
+  const [showCompleted, setShowCompleted] = useState(false);
 
   const load = async () => {
     const { data } = await supabase.from("meetings").select("*").order("start_at", { ascending: true });
@@ -228,7 +231,9 @@ function AgendaPage() {
     load();
   }, []);
 
-  const grouped = groupByDay(meetings);
+  const visible = showCompleted ? meetings : meetings.filter((m) => !m.completed_at);
+  const grouped = groupByDay(visible);
+  const completedCount = meetings.filter((m) => m.completed_at).length;
 
   return (
     <div className="space-y-5">
@@ -237,14 +242,22 @@ function AgendaPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Agenda</h1>
           <p className="text-sm text-muted-foreground">Reuniões e eventos</p>
         </div>
-        <Button onClick={() => { setEditing(null); setOpen(true); }}>
-          <Plus className="size-4" /> Novo evento
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowCompleted((v) => !v)}>
+            {showCompleted ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            {showCompleted ? "Ocultar concluídos" : `Mostrar concluídos${completedCount ? ` (${completedCount})` : ""}`}
+          </Button>
+          <Button onClick={() => { setEditing(null); setOpen(true); }}>
+            <Plus className="size-4" /> Novo evento
+          </Button>
+        </div>
       </div>
 
       {grouped.length === 0 && (
         <div className="rounded-2xl border bg-card p-10 text-center text-sm text-muted-foreground">
-          Nenhuma reunião cadastrada. Crie a primeira clicando em “Novo evento”.
+          {showCompleted
+            ? "Nenhuma reunião encontrada."
+            : "Nenhuma reunião pendente. Crie um evento ou exiba os concluídos."}
         </div>
       )}
 
@@ -294,9 +307,43 @@ function MeetingCard({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteScope, setDeleteScope] = useState<SeriesDeleteScope>("single");
   const [deleting, setDeleting] = useState(false);
+  const [completeOpen, setCompleteOpen] = useState(false);
+  const [completing, setCompleting] = useState(false);
 
+  const isCompleted = Boolean(meeting.completed_at);
   const isSeriesMember = Boolean(meeting.recurrence || meeting.parent_meeting_id);
   const isGeneratedOccurrence = Boolean(meeting.parent_meeting_id);
+
+  const completeMeeting = async (occurred: boolean) => {
+    setCompleting(true);
+    try {
+      const { error } = await supabase
+        .from("meetings")
+        .update({ completed_at: new Date().toISOString(), occurred })
+        .eq("id", meeting.id);
+      if (error) throw error;
+      toast.success(occurred ? "Evento marcado como realizado" : "Evento marcado como não realizado");
+      setCompleteOpen(false);
+      onChanged();
+    } catch (error: any) {
+      toast.error(error.message ?? "Não foi possível concluir o evento");
+    } finally {
+      setCompleting(false);
+    }
+  };
+
+  const reopenMeeting = async () => {
+    const { error } = await supabase
+      .from("meetings")
+      .update({ completed_at: null, occurred: null })
+      .eq("id", meeting.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Evento reaberto");
+    onChanged();
+  };
 
   useEffect(() => {
     setDeleteScope(isSeriesMember ? "single" : "all");
@@ -424,7 +471,7 @@ function MeetingCard({
 
   return (
     <>
-      <div className="rounded-xl border bg-card p-4">
+      <div className={`rounded-xl border bg-card p-4 ${isCompleted ? "opacity-60" : ""}`}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -439,6 +486,11 @@ function MeetingCard({
                 </Badge>
               )}
               {isGeneratedOccurrence && <Badge variant="secondary">Ocorrência da série</Badge>}
+              {isCompleted && (
+                <Badge variant={meeting.occurred === false ? "destructive" : "default"}>
+                  {meeting.occurred === false ? "Não realizado" : "Realizado"}
+                </Badge>
+              )}
             </div>
 
             <button onClick={onEdit} className="mt-1 text-left font-medium hover:text-primary">
@@ -470,16 +522,28 @@ function MeetingCard({
           </div>
 
           <div className="flex gap-1">
-            {meeting.meeting_link && (
+            {meeting.meeting_link && !isCompleted && (
               <Button asChild size="sm" variant="outline">
                 <a href={meeting.meeting_link} target="_blank" rel="noreferrer">
                   <ExternalLink className="size-3.5" /> Entrar
                 </a>
               </Button>
             )}
-            <Button size="sm" variant="ghost" onClick={() => setNewTaskOpen(true)}>
-              <ListPlus className="size-3.5" /> Tarefa
-            </Button>
+            {!isCompleted && (
+              <>
+                <Button size="sm" variant="default" onClick={() => setCompleteOpen(true)} title="Concluir">
+                  <Check className="size-3.5" /> Concluir
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setNewTaskOpen(true)}>
+                  <ListPlus className="size-3.5" /> Tarefa
+                </Button>
+              </>
+            )}
+            {isCompleted && (
+              <Button size="sm" variant="outline" onClick={reopenMeeting}>
+                Reabrir
+              </Button>
+            )}
             <Button size="icon" variant="ghost" onClick={() => setDeleteOpen(true)}>
               <Trash2 className="size-4 text-destructive" />
             </Button>
@@ -535,6 +599,28 @@ function MeetingCard({
             <Button variant="outline" onClick={() => setDeleteOpen(false)} disabled={deleting}>Cancelar</Button>
             <Button onClick={handleDelete} disabled={deleting}>
               {deleting ? "Excluindo..." : "Excluir"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={completeOpen} onOpenChange={setCompleteOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Concluir evento</DialogTitle>
+          </DialogHeader>
+          <div className="py-2 text-sm text-muted-foreground">
+            O evento ocorreu?
+          </div>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
+            <Button variant="outline" onClick={() => setCompleteOpen(false)} disabled={completing}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={() => completeMeeting(false)} disabled={completing}>
+              Não realizado
+            </Button>
+            <Button onClick={() => completeMeeting(true)} disabled={completing}>
+              <Check className="size-4" /> Realizado
             </Button>
           </DialogFooter>
         </DialogContent>
