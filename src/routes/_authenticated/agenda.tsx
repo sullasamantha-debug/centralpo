@@ -220,6 +220,7 @@ function AgendaPage() {
   const [meetings, setMeetings] = useState<MeetingRecord[]>([]);
   const [editing, setEditing] = useState<MeetingRecord | null>(null);
   const [open, setOpen] = useState(false);
+  const [showCompleted, setShowCompleted] = useState(false);
 
   const load = async () => {
     const { data } = await supabase.from("meetings").select("*").order("start_at", { ascending: true });
@@ -230,7 +231,9 @@ function AgendaPage() {
     load();
   }, []);
 
-  const grouped = groupByDay(meetings);
+  const visible = showCompleted ? meetings : meetings.filter((m) => !m.completed_at);
+  const grouped = groupByDay(visible);
+  const completedCount = meetings.filter((m) => m.completed_at).length;
 
   return (
     <div className="space-y-5">
@@ -239,14 +242,22 @@ function AgendaPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Agenda</h1>
           <p className="text-sm text-muted-foreground">Reuniões e eventos</p>
         </div>
-        <Button onClick={() => { setEditing(null); setOpen(true); }}>
-          <Plus className="size-4" /> Novo evento
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowCompleted((v) => !v)}>
+            {showCompleted ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            {showCompleted ? "Ocultar concluídos" : `Mostrar concluídos${completedCount ? ` (${completedCount})` : ""}`}
+          </Button>
+          <Button onClick={() => { setEditing(null); setOpen(true); }}>
+            <Plus className="size-4" /> Novo evento
+          </Button>
+        </div>
       </div>
 
       {grouped.length === 0 && (
         <div className="rounded-2xl border bg-card p-10 text-center text-sm text-muted-foreground">
-          Nenhuma reunião cadastrada. Crie a primeira clicando em “Novo evento”.
+          {showCompleted
+            ? "Nenhuma reunião encontrada."
+            : "Nenhuma reunião pendente. Crie um evento ou exiba os concluídos."}
         </div>
       )}
 
