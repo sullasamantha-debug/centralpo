@@ -486,6 +486,11 @@ function MeetingCard({
                 </Badge>
               )}
               {isGeneratedOccurrence && <Badge variant="secondary">Ocorrência da série</Badge>}
+              {isCompleted && (
+                <Badge variant={meeting.occurred === false ? "destructive" : "default"}>
+                  {meeting.occurred === false ? "Não realizado" : "Realizado"}
+                </Badge>
+              )}
             </div>
 
             <button onClick={onEdit} className="mt-1 text-left font-medium hover:text-primary">
