@@ -348,6 +348,7 @@ export type Database = {
             | Database["public"]["Enums"]["response_channel"]
             | null
           response_summary: string | null
+          sort_order: number | null
           status: Database["public"]["Enums"]["task_status"]
           title: string
           updated_at: string
@@ -374,6 +375,7 @@ export type Database = {
             | Database["public"]["Enums"]["response_channel"]
             | null
           response_summary?: string | null
+          sort_order?: number | null
           status?: Database["public"]["Enums"]["task_status"]
           title: string
           updated_at?: string
@@ -400,6 +402,7 @@ export type Database = {
             | Database["public"]["Enums"]["response_channel"]
             | null
           response_summary?: string | null
+          sort_order?: number | null
           status?: Database["public"]["Enums"]["task_status"]
           title?: string
           updated_at?: string
@@ -414,6 +417,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_preferences: {
+        Row: {
+          dashboard_layout: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          dashboard_layout?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          dashboard_layout?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
