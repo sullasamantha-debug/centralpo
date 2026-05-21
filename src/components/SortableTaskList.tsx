@@ -83,13 +83,13 @@ function SortableTaskItem({ id, children }: { id: string; children: ReactNode })
     <div
       ref={setNodeRef}
       style={style}
-      className={cn("relative group/sortable", isDragging && "opacity-50 z-10")}
+      className={cn("relative group/sortable pl-5", isDragging && "opacity-50 z-10")}
     >
       <button
         {...attributes}
         {...listeners}
         type="button"
-        className="absolute -left-1 top-1/2 -translate-y-1/2 z-10 size-6 grid place-items-center rounded text-muted-foreground/40 hover:text-foreground hover:bg-muted/60 opacity-0 group-hover/sortable:opacity-100 touch-none cursor-grab active:cursor-grabbing transition-opacity md:opacity-0 max-md:opacity-60"
+        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 size-5 grid place-items-center rounded text-muted-foreground/40 hover:text-foreground hover:bg-muted/60 touch-none cursor-grab active:cursor-grabbing transition-opacity md:opacity-0 md:group-hover/sortable:opacity-100 opacity-60"
         aria-label="Arrastar"
       >
         <GripVertical className="size-4" />
