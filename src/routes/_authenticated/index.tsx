@@ -286,7 +286,7 @@ function Dashboard() {
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleLayoutDragEnd}>
         <SortableContext items={visibleIds} strategy={rectSortingStrategy}>
           <div className="grid lg:grid-cols-2 gap-4 auto-rows-min">
-            {visibleLayout.map((c) => <div key={c.id} className={c.id === "minhas_tarefas" ? "lg:col-span-2 contents" : "contents"}>{renderCard(c.id, c.collapsed)}</div>)}
+            {visibleLayout.map((c) => <Fragment key={c.id}>{renderCard(c.id, c.collapsed)}</Fragment>)}
           </div>
         </SortableContext>
       </DndContext>
